@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign up – CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="nav" id="nav"></header>
+  <main>
+    <form id="form" class="form card" novalidate>
+      <h1>Create account</h1>
+      <label for="name">Full name</label><input id="name" autocomplete="name" required>
+      <label for="username">Username (letters, numbers, underscore)</label><input id="username" autocomplete="username" maxlength="20" required>
+      <label for="email">Email</label><input id="email" type="email" autocomplete="email" required>
+      <label for="password">Password (min 6 characters)</label><input id="password" type="password" autocomplete="new-password" required>
+      <button class="btn" type="submit">Sign up</button>
+      <div id="msg" class="msg"></div>
+      <p class="muted" style="text-align:center">Already have an account? <a href="/login.html">Login</a></p>
+    </form>
+  </main>
+  <script src="/js/app.js"></script>
+  <script>
+    const S = window.Social;
+    S.renderNav();
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await S.api('/api/register', {
+          method: 'POST',
+          body: {
+            name: document.getElementById('name').value,
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+          }
+        });
+        location.href = '/index.html';
+      } catch (err) {
+        S.showMsg('msg', err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

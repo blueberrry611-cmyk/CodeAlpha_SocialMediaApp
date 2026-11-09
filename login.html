@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login – CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="nav" id="nav"></header>
+  <main>
+    <form id="form" class="form card" novalidate>
+      <h1>Login</h1>
+      <label for="identifier">Username or email</label><input id="identifier" autocomplete="username" required>
+      <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+      <button class="btn" type="submit">Login</button>
+      <div id="msg" class="msg"></div>
+      <p class="muted" style="text-align:center">New here? <a href="/register.html">Create an account</a></p>
+      <p class="muted" style="text-align:center">Demo: <strong>alice</strong> / <strong>demo123</strong></p>
+    </form>
+  </main>
+  <script src="/js/app.js"></script>
+  <script>
+    const S = window.Social;
+    S.renderNav();
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await S.api('/api/login', {
+          method: 'POST',
+          body: { identifier: document.getElementById('identifier').value, password: document.getElementById('password').value }
+        });
+        location.href = '/index.html';
+      } catch (err) {
+        S.showMsg('msg', err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

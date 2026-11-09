@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile – CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="nav" id="nav"></header>
+  <main style="max-width:680px">
+    <div id="head" class="card muted">Loading...</div>
+    <div id="edit" class="card" style="display:none">
+      <h2>Edit profile</h2>
+      <label for="e-name" class="muted">Name</label><input id="e-name" maxlength="60">
+      <label for="e-bio" class="muted" style="display:block;margin-top:10px">Bio</label><textarea id="e-bio" rows="2" maxlength="160"></textarea>
+      <div class="row" style="margin-top:12px"><button class="btn" id="e-save">Save</button><button class="btn secondary" id="e-cancel">Cancel</button></div>
+      <div id="e-msg" class="msg"></div>
+    </div>
+    <div id="posts"></div>
+  </main>
+  <script src="/js/app.js"></script>
+  <script>
+    const S = window.Social;
+    const username = new URLSearchParams(location.search).get('u');
+    let me = null, profile = null;
+
+    function renderHead() {
+      const u = profile.user, st = profile.stats;
+      document.title = u.name + ' (@' + u.username + ') – CodeAlpha Social';
+      document.getElementById('head').className = 'card';
+      document.getElementById('head').innerHTML =
+        '<div class="profile-head">' + S.avatar(u, 'big') +
+        '<div class="info"><h1>' + S.esc(u.name) + '</h1><span class="muted">@' + S.esc(u.username) + '</span>' +
+        '<p style="margin:8px 0 0">' + (u.bio ? S.esc(u.bio) : '<span class="muted">No bio yet.</span>') + '</p>' +
+        '<div class="stats"><div><strong>' + st.posts + '</strong><span>Posts</span></div>' +
+        '<div><strong id="followers">' + st.followers + '</strong><span>Followers</span></div>' +
+        '<div><strong>' + st.following + '</strong><span>Following</span></div></div></div>' +
+        '<div>' + (profile.isMe
+          ? '<button class="btn secondary" id="edit-btn">Edit profile</button>'
+          : '<button class="btn' + (profile.isFollowing ? ' secondary' : '') + '" id="follow-btn">' + (profile.isFollowing ? 'Following' : 'Follow') + '</button>') +
+        '</div></div>';
+
+      const eb = document.getElementById('edit-btn');
+      if (eb) eb.addEventListener('click', () => {
+        document.getElementById('e-name').value = u.name;
+        document.getElementById('e-bio').value = u.bio || '';
+        document.getElementById('edit').style.display = 'block';
+      });
+      const fb = document.getElementById('follow-btn');
+      if (fb) fb.addEventListener('click', async () => {
+        if (!me) { location.href = '/login.html'; return; }
+        try {
+          const r = await S.api('/api/users/' + encodeURIComponent(u.username) + '/follow', { method: 'POST' });
+          profile.isFollowing = r.following;
+          profile.stats.followers = r.followers;
+          renderHead();
+        } catch (err) { S.toast(err.message); }
+      });
+    }
+
+    function renderPosts() {
+      const box = document.getElementById('posts');
+      box.innerHTML = profile.posts.length
+        ? profile.posts.map(S.postHtml).join('')
+        : '<div class="card muted">No posts yet.</div>';
+    }
+
+    async function load() {
+      try {
+        profile = await S.api('/api/users/' + encodeURIComponent(username));
+        renderHead();
+        renderPosts();
+      } catch (e) {
+        document.getElementById('head').innerHTML = '<span style="color:#d93025">' + S.esc(e.message) + '</span>';
+      }
+    }
+
+    (async function () {
+      me = await S.renderNav();
+      if (!username) { document.getElementById('head').textContent = 'No user specified.'; return; }
+
+      S.bindPostActions(document.getElementById('posts'), me, load);
+      document.getElementById('e-cancel').addEventListener('click', () => { document.getElementById('edit').style.display = 'none'; });
+      document.getElementById('e-save').addEventListener('click', async () => {
+        try {
+          await S.api('/api/me/profile', { method: 'POST', body: { name: document.getElementById('e-name').value, bio: document.getElementById('e-bio').value } });
+          document.getElementById('edit').style.display = 'none';
+          S.toast('Profile updated');
+          load();
+        } catch (err) { S.showMsg('e-msg', err.message, 'error'); }
+      });
+      load();
+    })();
+  </script>
+</body>
+</html>

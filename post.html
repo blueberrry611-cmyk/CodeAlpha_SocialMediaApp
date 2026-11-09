@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post – CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="nav" id="nav"></header>
+  <main style="max-width:680px">
+    <p><a href="/index.html">&larr; Back to home</a></p>
+    <div id="post"><p class="muted">Loading...</p></div>
+    <div class="card" id="comments-card" style="display:none">
+      <h2>Comments</h2>
+      <div id="form-box"></div>
+      <div id="comments"></div>
+    </div>
+  </main>
+  <script src="/js/app.js"></script>
+  <script>
+    const S = window.Social;
+    const id = new URLSearchParams(location.search).get('id');
+    let me = null;
+
+    async function loadPost() {
+      const p = (await S.api('/api/posts/' + encodeURIComponent(id))).post;
+      document.getElementById('post').innerHTML = S.postHtml(p);
+    }
+
+    async function loadComments() {
+      const box = document.getElementById('comments');
+      const list = (await S.api('/api/posts/' + encodeURIComponent(id) + '/comments')).comments;
+      box.innerHTML = list.length ? list.map((c) =>
+        '<div class="comment">' + S.avatar(c.author, 'sm') + '<div style="flex:1;min-width:0">' +
+        '<a href="' + S.profileUrl(c.author.username) + '"><strong>' + S.esc(c.author.name) + '</strong></a> ' +
+        '<span class="muted">@' + S.esc(c.author.username) + ' · ' + S.esc(S.timeAgo(c.createdAt)) + '</span>' +
+        '<div class="ctext">' + S.esc(c.text) + '</div></div>' +
+        (c.mine ? '<button class="act del" style="margin-left:0" data-cdel="' + c.id + '">Delete</button>' : '') + '</div>'
+      ).join('') : '<p class="muted">No comments yet.</p>';
+    }
+
+    (async function () {
+      me = await S.renderNav();
+      try {
+        await loadPost();
+      } catch (e) {
+        document.getElementById('post').innerHTML = '<div class="card"><span style="color:#d93025">' + S.esc(e.message) + '</span></div>';
+        return;
+      }
+      S.bindPostActions(document.getElementById('post'), me, () => { location.href = '/index.html'; });
+      document.getElementById('comments-card').style.display = 'block';
+
+      const fb = document.getElementById('form-box');
+      if (me) {
+        fb.innerHTML = '<div class="row"><input id="c-text" maxlength="200" placeholder="Write a comment..."><button class="btn" id="c-send">Send</button></div><div id="c-msg" class="msg"></div>';
+        const send = async () => {
+          const input = document.getElementById('c-text');
+          try {
+            await S.api('/api/posts/' + encodeURIComponent(id) + '/comments', { method: 'POST', body: { text: input.value } });
+            input.value = '';
+            document.getElementById('c-msg').className = 'msg';
+            await loadComments();
+            await loadPost();
+          } catch (err) { S.showMsg('c-msg', err.message, 'error'); }
+        };
+        document.getElementById('c-send').addEventListener('click', send);
+        document.getElementById('c-text').addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+      } else {
+        fb.innerHTML = '<p class="muted"><a href="/login.html">Log in</a> to comment.</p>';
+      }
+
+      document.getElementById('comments').addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-cdel]');
+        if (!btn) return;
+        try {
+          await S.api('/api/comments/' + btn.dataset.cdel, { method: 'DELETE' });
+          await loadComments();
+          await loadPost();
+        } catch (err) { S.toast(err.message); }
+      });
+
+      loadComments();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home – CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="nav" id="nav"></header>
+  <main>
+    <div class="layout">
+      <section>
+        <div id="top"></div>
+        <div class="tabs">
+          <button class="tab active" id="tab-all">Everyone</button>
+          <button class="tab" id="tab-following">Following</button>
+        </div>
+        <div id="feed"><p class="muted">Loading...</p></div>
+      </section>
+      <aside>
+        <div class="card">
+          <h2>Who to follow</h2>
+          <div id="suggest"><p class="muted">Loading...</p></div>
+          <p style="margin:10px 0 0"><a href="/search.html">Find more people →</a></p>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <footer>CodeAlpha Full Stack Internship – Task 2</footer>
+  <script src="/js/app.js"></script>
+  <script>
+    const S = window.Social;
+    let me = null, scope = 'all';
+    const feed = document.getElementById('feed');
+
+    async function loadFeed() {
+      try {
+        const data = await S.api('/api/feed?scope=' + scope);
+        if (!data.posts.length) {
+          feed.innerHTML = '<div class="card muted">' + (scope === 'following'
+            ? 'Nothing here yet. Follow some people to see their posts.'
+            : 'No posts yet. Be the first to post!') + '</div>';
+          return;
+        }
+        feed.innerHTML = data.posts.map(S.postHtml).join('');
+      } catch (e) {
+        feed.innerHTML = '<div class="card"><span style="color:#d93025">' + S.esc(e.message) + '</span></div>';
+      }
+    }
+
+    async function loadSuggestions() {
+      const box = document.getElementById('suggest');
+      try {
+        const users = (await S.api('/api/users')).users.slice(0, 5);
+        if (!users.length) { box.innerHTML = '<p class="muted">No one else here yet.</p>'; return; }
+        box.innerHTML = users.map((u) =>
+          '<div class="suggest">' + S.avatar(u, 'sm') +
+          '<div class="who"><a href="' + S.profileUrl(u.username) + '">' + S.esc(u.name) + '</a><span class="muted">@' + S.esc(u.username) + '</span></div>' +
+          '<button class="btn small' + (u.following ? ' secondary' : '') + '" data-follow="' + S.esc(u.username) + '">' + (u.following ? 'Following' : 'Follow') + '</button></div>'
+        ).join('');
+      } catch (e) {
+        box.innerHTML = '<p class="muted">' + S.esc(e.message) + '</p>';
+      }
+    }
+
+    function setTab(next) {
+      scope = next;
+      document.getElementById('tab-all').classList.toggle('active', next === 'all');
+      document.getElementById('tab-following').classList.toggle('active', next === 'following');
+      loadFeed();
+    }
+
+    (async function () {
+      me = await S.renderNav();
+      const top = document.getElementById('top');
+
+      if (me) {
+        top.innerHTML =
+          '<div class="card"><textarea id="text" rows="3" maxlength="280" placeholder="What is on your mind, ' + S.esc(me.name.split(' ')[0]) + '?"></textarea>' +
+          '<div class="compose-foot"><span class="muted" id="count">0 / 280</span><button class="btn" id="post-btn">Post</button></div>' +
+          '<div id="msg" class="msg"></div></div>';
+        const text = document.getElementById('text');
+        text.addEventListener('input', () => { document.getElementById('count').textContent = text.value.length + ' / 280'; });
+        document.getElementById('post-btn').addEventListener('click', async () => {
+          const btn = document.getElementById('post-btn');
+          btn.disabled = true;
+          try {
+            await S.api('/api/posts', { method: 'POST', body: { text: text.value } });
+            text.value = '';
+            document.getElementById('count').textContent = '0 / 280';
+            document.getElementById('msg').className = 'msg';
+            loadFeed();
+          } catch (err) {
+            S.showMsg('msg', err.message, 'error');
+          }
+          btn.disabled = false;
+        });
+      } else {
+        top.innerHTML = '<div class="card hero"><h1>Welcome to CodeAlpha Social</h1><p class="muted">Share posts, follow people and join the conversation.</p>' +
+          '<a class="btn" href="/register.html">Create an account</a> <a class="btn secondary" href="/login.html">Login</a>' +
+          '<p class="muted" style="margin-top:12px">Demo login: <strong>alice</strong> / <strong>demo123</strong></p></div>';
+      }
+
+      document.getElementById('tab-all').addEventListener('click', () => setTab('all'));
+      document.getElementById('tab-following').addEventListener('click', () => {
+        if (!me) { location.href = '/login.html'; return; }
+        setTab('following');
+      });
+
+      S.bindPostActions(feed, me, loadFeed);
+
+      document.getElementById('suggest').addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-follow]');
+        if (!btn) return;
+        if (!me) { location.href = '/login.html'; return; }
+        try {
+          const r = await S.api('/api/users/' + encodeURIComponent(btn.dataset.follow) + '/follow', { method: 'POST' });
+          btn.textContent = r.following ? 'Following' : 'Follow';
+          btn.classList.toggle('secondary', r.following);
+          if (scope === 'following') loadFeed();
+        } catch (err) { S.toast(err.message); }
+      });
+
+      loadFeed();
+      loadSuggestions();
+    })();
+  </script>
+</body>
+</html>

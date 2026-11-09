@@ -1,0 +1,120 @@
+{
+  "counters": {
+    "users": 3,
+    "posts": 4,
+    "comments": 2
+  },
+  "users": [
+    {
+      "id": 1,
+      "username": "alice",
+      "name": "Alice Sharma",
+      "bio": "Coffee, code and long walks.",
+      "email": "alice@demo.com",
+      "passwordHash": "95c1bf067f1d3892ef8be2702870037c:978e79a8ff502311a11558d20dabdbf67687f42038026ca0c8d63f119e2b6fb4692a1b96362a3c6fa34c8d9019c90efcd95bdbd52539fb5845de0cc66871cf5c",
+      "createdAt": "2026-11-06T07:35:55.163Z"
+    },
+    {
+      "id": 2,
+      "username": "bob",
+      "name": "Bob Verma",
+      "bio": "Full stack learner. Building things one commit at a time.",
+      "email": "bob@demo.com",
+      "passwordHash": "66dc0587ab16e6206f30a1bcc96630eb:9651901f610ae047839e27bfd2f5c2ec420ef0a3728ac141f83404ad37f6583f7b118117aef5b59369ec3ee23d0d08586ce7f2802027d12900aa5be4ceb72b3c",
+      "createdAt": "2026-11-06T07:35:55.163Z"
+    },
+    {
+      "id": 3,
+      "username": "carol",
+      "name": "Carol Singh",
+      "bio": "Photographer and traveller.",
+      "email": "carol@demo.com",
+      "passwordHash": "6239ffc90f67b0592cba8c894eb39415:6987065ba1baf849f08a0357cdbe8a1fb94ce3adbd6acc4042be38adfcfedaad7c3fe21b06522b7820f8ffd6765288baf014a9f77060536632129b106e8e69d2",
+      "createdAt": "2026-11-06T07:35:55.163Z"
+    }
+  ],
+  "posts": [
+    {
+      "id": 1,
+      "userId": 1,
+      "text": "Hello everyone! Excited to be part of this little community.",
+      "createdAt": "2026-11-08T21:35:55.163Z"
+    },
+    {
+      "id": 2,
+      "userId": 2,
+      "text": "Just finished my first Express.js API. The feeling is unreal!",
+      "createdAt": "2026-11-09T02:35:55.163Z"
+    },
+    {
+      "id": 3,
+      "userId": 3,
+      "text": "Sunsets are better when shared. What is the best view you have seen?",
+      "createdAt": "2026-11-09T05:35:55.163Z"
+    },
+    {
+      "id": 4,
+      "userId": 1,
+      "text": "Tip of the day: write small commits and push often.",
+      "createdAt": "2026-11-09T06:50:55.163Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "postId": 2,
+      "userId": 1,
+      "text": "Congrats Bob, keep going!",
+      "createdAt": "2026-11-09T02:55:55.163Z"
+    },
+    {
+      "id": 2,
+      "postId": 3,
+      "userId": 2,
+      "text": "The hills at sunrise, hands down.",
+      "createdAt": "2026-11-09T05:55:55.163Z"
+    }
+  ],
+  "likes": [
+    {
+      "userId": 2,
+      "postId": 1
+    },
+    {
+      "userId": 1,
+      "postId": 2
+    },
+    {
+      "userId": 3,
+      "postId": 2
+    },
+    {
+      "userId": 1,
+      "postId": 3
+    },
+    {
+      "userId": 1,
+      "postId": 1
+    }
+  ],
+  "follows": [
+    {
+      "followerId": 1,
+      "followingId": 2
+    },
+    {
+      "followerId": 2,
+      "followingId": 1
+    },
+    {
+      "followerId": 3,
+      "followingId": 1
+    }
+  ],
+  "sessions": {
+    "f6e10e279b8d64d0c95ac3de530fb8915b86bd83ee32ae4cce01ba84ae637e47": {
+      "userId": 1,
+      "expires": 1794814782403
+    }
+  }
+}

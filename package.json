@@ -1,0 +1,16 @@
+{
+  "name": "codealpha-social-media-app",
+  "version": "1.0.0",
+  "description": "CodeAlpha Full Stack Internship - Task 2: Mini Social Media Platform (Express.js + vanilla JS)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

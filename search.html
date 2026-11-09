@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Find people – CodeAlpha Social</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="nav" id="nav"></header>
+  <main style="max-width:680px">
+    <h1>Find people</h1>
+    <input id="q" type="search" placeholder="Search by name or username..." style="margin-bottom:14px">
+    <div class="card" id="results"><p class="muted">Loading...</p></div>
+  </main>
+  <script src="/js/app.js"></script>
+  <script>
+    const S = window.Social;
+    let me = null, timer;
+    const box = document.getElementById('results');
+
+    async function search() {
+      const q = document.getElementById('q').value.trim();
+      try {
+        const users = (await S.api('/api/users?q=' + encodeURIComponent(q))).users;
+        box.innerHTML = users.length ? users.map((u) =>
+          '<div class="suggest">' + S.avatar(u, 'sm') +
+          '<div class="who"><a href="' + S.profileUrl(u.username) + '">' + S.esc(u.name) + '</a><span class="muted">@' + S.esc(u.username) + (u.bio ? ' · ' + S.esc(u.bio) : '') + '</span></div>' +
+          '<button class="btn small' + (u.following ? ' secondary' : '') + '" data-follow="' + S.esc(u.username) + '">' + (u.following ? 'Following' : 'Follow') + '</button></div>'
+        ).join('') : '<p class="muted">No people found.</p>';
+      } catch (e) {
+        box.innerHTML = '<p style="color:#d93025">' + S.esc(e.message) + '</p>';
+      }
+    }
+
+    (async function () {
+      me = await S.renderNav();
+      document.getElementById('q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(search, 250); });
+      box.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-follow]');
+        if (!btn) return;
+        if (!me) { location.href = '/login.html'; return; }
+        try {
+          const r = await S.api('/api/users/' + encodeURIComponent(btn.dataset.follow) + '/follow', { method: 'POST' });
+          btn.textContent = r.following ? 'Following' : 'Follow';
+          btn.classList.toggle('secondary', r.following);
+        } catch (err) { S.toast(err.message); }
+      });
+      search();
+    })();
+  </script>
+</body>
+</html>
